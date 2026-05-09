@@ -1,6 +1,6 @@
-# Snake AI Web Judge (贪吃蛇 AI 可视化评测系统)
-
-这是一个用于开发和调试贪吃蛇 AI 的本地 Web 评测框架。通过提供可视化回放和自动化跑分功能，帮助开发者更直观地定位 AI 的逻辑问题并评估算法性能。系统主要支持 macOS 和 Linux。
+# Snake AI Web Judge (贪吃蛇算法可视化评测机)
+**背景**：2025级BUPT项目式大作业。在4月底做出CLI版本的评测机，主要用于观察各类算法在贪吃蛇问题上的解决能力。5月时看到同道中人做出Windows版可视化评测机，遂跟风。
+这是一个用于开发和调试贪吃蛇算法的本地 Web 评测框架。通过提供可视化回放和自动化跑分功能，帮助开发者更直观地定位算法的逻辑问题并评估算法性能。系统主要支持 macOS 和 Linux。
 
 ## 主要功能
 
@@ -50,7 +50,7 @@ python3 web_app.py
 
 服务启动后，在浏览器访问 `http://127.0.0.1:5050` 即可开始使用。
 
-> **常见问题排查**：如果在执行 `python3` 或 `pip3` 时系统提示找不到命令，可能是你的 macOS/Linux 环境默认绑定的是 `python` / `pip`（常见于通过 conda、pyenv 管理的环境，或某些精简版 Linux 发行版）。你可以尝试将命令替换为 `python -m pip install -r requirements.txt` 和 `python web_app.py`。
+> **常见问题排查**：如果在执行 `python3` 或 `pip3` 时系统提示找不到命令，可能是你的 macOS/Linux 环境默认绑定的是 `python` / `pip`。你可以尝试将命令替换为 `python -m pip install -r requirements.txt` 和 `python web_app.py`。
 
 ## AI 通信协议规范
 
@@ -93,5 +93,5 @@ AI 需要在 stdout 输出一行数据，包含两个以空格分隔的值：
 
 - 单体快速验证：`python3 run_oj_tests.py ./my_ai`
 - 多版本 AI 跑分排行：`python3 benchmark_all.py ./ai_v1 ./ai_v2`
-- 批量极限抗压测试：`python3 batch_benchmark.py ./ai_v1 ./ai_v2 100`
+- 批量测试多版本 AI 跑分排行：`python3 batch_benchmark.py ./ai_v1 ./ai_v2 10`
 
