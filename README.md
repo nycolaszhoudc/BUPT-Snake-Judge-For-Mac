@@ -13,7 +13,7 @@
 ## 仓库结构
 
 ```text
-snake_judge_opensource/
+BUPT-Snake-Judge-For-Mac/
 ├── templates/
 │   └── index.html          # Web 前端页面
 ├── web_app.py              # Flask 后端服务
