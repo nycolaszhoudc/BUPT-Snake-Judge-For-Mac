@@ -1079,28 +1079,6 @@ int main(int argc, char *argv[]) {
     int hasFood = 0;
     
     while (!state.gameOver) {
-        if (!hasFood) {
-            if (strcmp(foodMode, "seq") == 0 && foodSeq.count > 0) {
-                if (getNextFood(&state, &foodX, &foodY)) {
-                    hasFood = 1;
-                }
-            } else if (strcmp(foodMode, "far") == 0) {
-                generateFoodFarFromHead(&state, &foodX, &foodY);
-                hasFood = (foodX != -1);
-            } else {
-                generateFoodRandom(&state, &foodX, &foodY, difficulty);
-                hasFood = (foodX != -1);
-            }
-        }
-        
-        if (hasFood) {
-            state.map[foodY][foodX] = FOOD;
-            fprintf(aiIn, "%d %d\n", foodY, foodX);
-        } else {
-            fprintf(aiIn, "100 100\n");
-        }
-        fflush(aiIn);
-        
         char move;
         int reportedScore;
         
@@ -1194,6 +1172,34 @@ int main(int argc, char *argv[]) {
         
         moveSnake(&state, move);
         
+        int newFoodGenerated = 0;
+        if (!hasFood && !state.gameOver) {
+            if (strcmp(foodMode, "seq") == 0 && foodSeq.count > 0) {
+                if (getNextFood(&state, &foodX, &foodY)) {
+                    hasFood = 1;
+                    newFoodGenerated = 1;
+                }
+            } else if (strcmp(foodMode, "far") == 0) {
+                generateFoodFarFromHead(&state, &foodX, &foodY);
+                hasFood = (foodX != -1);
+                newFoodGenerated = hasFood;
+            } else {
+                generateFoodRandom(&state, &foodX, &foodY, difficulty);
+                hasFood = (foodX != -1);
+                newFoodGenerated = hasFood;
+            }
+        }
+        
+        if (state.gameOver) {
+            fprintf(aiIn, "100 100\n");
+        } else if (newFoodGenerated) {
+            state.map[foodY][foodX] = FOOD;
+            fprintf(aiIn, "%d %d\n", foodY, foodX);
+        } else {
+            fprintf(aiIn, "20 20\n");
+        }
+        fflush(aiIn);
+        
         if (verbose) {
             printf("\n===== 第%d步移动后 =====\n", state.moveCount);
             printMap(&state);
@@ -1207,9 +1213,11 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    // 发送游戏结束信号
-    fprintf(aiIn, "100 100\n");
-    fflush(aiIn);
+    // 如果是因为非法移动或超时而死，循环里 break 出来了，需要补发 100 100
+    if (state.deathReason == 4 || state.deathReason == 7) {
+        fprintf(aiIn, "100 100\n");
+        fflush(aiIn);
+    }
     
     // 读取 AI 返回的最终地图和得分 (官方评测机要求)
     char finalMapLine[MAP_SIZE + 2];
