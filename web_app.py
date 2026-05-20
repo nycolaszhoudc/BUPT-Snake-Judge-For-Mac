@@ -8,6 +8,19 @@ from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
+TEMP_AI_SOURCE = "temp_ai.c"
+TEMP_AI_EXECUTABLE = "./temp_ai"
+JUDGE_EXECUTABLE = "./snake_judge"
+
+
+def ensure_compiled_ai():
+    if not os.path.exists(TEMP_AI_EXECUTABLE):
+        return jsonify({
+            "success": False,
+            "error": "AI not compiled yet. Please compile first."
+        })
+    return None
+
 # Serve the UI
 @app.route('/')
 def index():
@@ -29,12 +42,12 @@ def compile_code():
             "logs": "错误：代码长度超出 24KB 限制！"
         })
 
-    # Save code to temp_ai.c
-    with open('temp_ai.c', 'w') as f:
+    # Save code to the editor-backed temporary AI source.
+    with open(TEMP_AI_SOURCE, 'w') as f:
         f.write(code)
 
     # Compile using gcc
-    compile_cmd = ["gcc", "temp_ai.c", "-o", "temp_ai", "-O2", "-Wall", "-lm"]
+    compile_cmd = ["gcc", TEMP_AI_SOURCE, "-o", TEMP_AI_EXECUTABLE[2:], "-O2", "-Wall", "-lm"]
     try:
         result = subprocess.run(compile_cmd, capture_output=True, text=True)
         if result.returncode != 0:
@@ -53,12 +66,16 @@ def compile_code():
 # Debug run
 @app.route('/api/debug', methods=['POST'])
 def debug_run():
+    compile_error = ensure_compiled_ai()
+    if compile_error:
+        return compile_error
+
     data = request.get_json() or {}
     # Optional arguments from request (e.g. map type, N, seed)
     args = data.get('args', [])
     difficulty = data.get('difficulty', 'medium-scatter')
     
-    cmd = ["./snake_judge", "./temp_ai", "-d", difficulty, "-v"] + args
+    cmd = [JUDGE_EXECUTABLE, TEMP_AI_EXECUTABLE, "-d", difficulty, "-v"] + args
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, errors='replace', timeout=10)
         output = result.stdout + "\n" + result.stderr
@@ -111,8 +128,9 @@ def debug_run():
 # Benchmark run
 @app.route('/api/benchmark', methods=['POST'])
 def benchmark_run():
-    if not os.path.exists("./temp_ai"):
-        return jsonify({'success': False, 'error': 'AI not compiled yet. Please compile first.'})
+    compile_error = ensure_compiled_ai()
+    if compile_error:
+        return compile_error
         
     data = request.get_json() or {}
     difficulty = data.get('difficulty', 'medium-scatter')
@@ -125,7 +143,7 @@ def benchmark_run():
     
     for i, n in enumerate(n_values):
         seed = base_seed + i * 10
-        cmd = ["./snake_judge", "./temp_ai", "-d", difficulty, "-n", str(n), "-s", str(seed), "-v"]
+        cmd = [JUDGE_EXECUTABLE, TEMP_AI_EXECUTABLE, "-d", difficulty, "-n", str(n), "-s", str(seed), "-v"]
         weight = 1.0 / (math.log2(n) + 1)
         
         try:
